@@ -164,7 +164,7 @@ def write_event_record(
         raise
 
     tmp_file.close()
-    os.rename(tmp_path, str(final_path))
+    os.replace(tmp_path, str(final_path))
     log.info(
         "event_record: alert_id=%s camera=%s written=%s",
         alert_id, camera_id, final_path,

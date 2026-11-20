@@ -27,9 +27,14 @@ dependencies = [
     "suntime>=1.1",
     "timm>=0.9",
     "torch>=2.0",
+    "opencv-python-headless>=4.13",
+    "tzdata>=2025.1",
 ]
 
 [project.optional-dependencies]
+recognition = ["transformers>=4.40,<5"]
+windows = ["waitress>=3.0"]
+
 dev = [
     "pytest",
     "pytest-asyncio",
@@ -55,7 +60,7 @@ exclude = ["data/vehicles/*.json"]
 "*.json" = ["ALL"]
 
 [tool.setuptools.packages.find]
-include = ["infra*", "listener*", "telegram_formatter*", "vehicle_matcher*"]
+include = ["infra*", "listener*", "telegram_formatter*", "vehicle_matcher*", "person_matcher*", "animal_matcher*"]
 
 [tool.pyright]
 include = ["infra", "listener", "telegram_formatter", "vehicle_matcher", "tests"]

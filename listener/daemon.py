@@ -1444,7 +1444,13 @@ def main():
     )
     hr.start(mcp_enabled=mcp_enabled)
 
-    app.run(host=host, port=port)
+    import platform
+
+    if platform.system() == "Windows":
+        from waitress import serve
+        serve(app, host=host, port=port, threads=4)
+    else:
+        app.run(host=host, port=port)
 
 
 # ---------------------------------------------------------------------------

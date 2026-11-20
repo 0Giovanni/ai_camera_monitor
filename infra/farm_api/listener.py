@@ -29,6 +29,7 @@ USAGE:
 from __future__ import annotations
 
 import logging
+import platform
 import re
 import subprocess
 from dataclasses import dataclass
@@ -123,6 +124,9 @@ def _get_listener_pid() -> int | None:
     Returns:
         PID as int, or None if the process is not found.
     """
+    if platform.system() == "Windows":
+        from infra.platform_service import windows_service_pid
+        return windows_service_pid()
     try:
         result = subprocess.run(
             ["launchctl", "list"],

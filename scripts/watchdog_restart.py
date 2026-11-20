@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import logging
 import os
+import platform
 import subprocess
 import time
 
@@ -66,6 +67,11 @@ def restart_listener(
     Returns:
         (exit_code, status_string) tuple.
     """
+    if platform.system() == "Windows":
+        from infra.platform_service import restart_windows_service
+        return restart_windows_service()
+    if platform.system() != "Darwin":
+        return 1, "No service restart adapter configured for this platform"
     if backoff_seconds is None:
         backoff_seconds = [30, 60, 120]
 

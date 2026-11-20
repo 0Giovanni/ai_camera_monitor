@@ -37,6 +37,7 @@ from __future__ import annotations
 import ipaddress
 import logging
 import os
+import platform
 import subprocess
 
 log = logging.getLogger(__name__)
@@ -51,8 +52,16 @@ def _resolve_tailnet_ip() -> str:
         return override
     try:
         out = subprocess.check_output(
-            ["ifconfig"], text=True, timeout=5
+            ["tailscale", "ip", "-4"] if platform.system() == "Windows" else ["ifconfig"],
+            text=True, timeout=5
         )
+        if platform.system() == "Windows":
+            for candidate in out.split():
+                try:
+                    if ipaddress.ip_address(candidate) in ipaddress.ip_network("100.64.0.0/10"):
+                        return candidate
+                except ValueError:
+                    continue
         for line in out.split("\n"):
             if "100." in line and "inet" in line:
                 parts = line.split()

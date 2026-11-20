@@ -22,6 +22,13 @@ and (if recognized) a structured match. The crop earns its keep: it's
 the difference between "a dog crossed the driveway" and "a small fluffy
 dog crossed the driveway, here is just the dog."
 
+## Windows proof of concept and prerecorded video
+
+See [Windows and MP4 evaluation](deploy/windows/README.md) for the incremental
+Windows 11 port, installation extras, camera-free sampled-event replay, and
+required local acceptance checks. Native Windows and GPU operation remain
+unverified; the original macOS workflow below remains supported.
+
 ## Quick start
 
 ```bash

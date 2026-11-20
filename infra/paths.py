@@ -84,6 +84,8 @@ RELATED:
 
 import logging
 import os
+import platform
+import shutil
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -101,7 +103,11 @@ LOCAL_TZ = ZoneInfo("America/New_York")
 # Hardcoded to the v2 root by default; tests override with
 # FARMSURV_PROJECT_ROOT. There is NO FARMSURV_PROJECT_ROOT pointing at
 # the old repo — that would defeat the two-system isolation contract.
-_DEFAULT_PROJECT_ROOT = os.path.expanduser("~/farm-surveillance-v2")
+_DEFAULT_PROJECT_ROOT = (
+    str(Path(__file__).resolve().parent.parent)
+    if platform.system() == "Windows"
+    else os.path.expanduser("~/farm-surveillance-v2")
+)
 PROJECT_ROOT = os.environ.get("FARMSURV_PROJECT_ROOT", _DEFAULT_PROJECT_ROOT)
 
 # DATA_DIR can be overridden via FARMSURV_DATA_DIR (used by tests)
@@ -267,7 +273,13 @@ MOTION_RECIPE_FILE = os.path.join(PROJECT_ROOT, "config", "motion_recipe.json")
 # macOS; override with BROWSER_CHROME_PATH if Playwright falls back to
 # bundled chromium and you want to point at a different install
 # (e.g. a portable Chrome, a different Chromium build). Phase 6B.166 §11.87.2.
-_DEFAULT_CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+_DEFAULT_CHROME_PATH = (
+    os.path.join(os.environ.get("PROGRAMFILES", r"C:\Program Files"), "Google", "Chrome", "Application", "chrome.exe")
+    if platform.system() == "Windows"
+    else "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    if platform.system() == "Darwin"
+    else shutil.which("google-chrome") or shutil.which("chromium") or "google-chrome"
+)
 BROWSER_CHROME_PATH = os.environ.get("BROWSER_CHROME_PATH", _DEFAULT_CHROME_PATH)
 
 # macOS Keychain — biometric encryption key storage

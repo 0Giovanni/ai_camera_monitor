@@ -42,7 +42,10 @@ def _patch_project_root(tmp_path):
 def _write_file(path: Path, size: int = 100) -> Path:
     """Write a file with given size bytes."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(b"\x00" * size)
+    # Cleanup measures logical st_size, not allocated blocks. Sparse fixtures
+    # preserve byte-count assertions without allocating tens of GB of RAM/disk.
+    with path.open("wb") as handle:
+        handle.truncate(size)
     return path
 
 

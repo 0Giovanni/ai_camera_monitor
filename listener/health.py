@@ -51,8 +51,11 @@ from __future__ import annotations
 import datetime
 import logging
 import os
+import platform
+import plistlib
 import re
 import shutil
+import socket
 import subprocess
 import threading
 import time
@@ -94,25 +97,14 @@ _PLIST_PATH: str = os.path.expanduser(
 
 
 def _read_plist_keepalive(plist_path: str | None = None) -> bool:
-    """Return True if the launchd plist has KeepAlive=true, False otherwise.
-
-    Reads via plutil(1) Print :KeepAlive; returns False if the key is missing,
-    the plist is absent, or plutil fails.
-    """
-    path = plist_path or _PLIST_PATH
+    """Read launchd configuration portably without invoking plutil."""
+    if platform.system() == "Windows" and plist_path is None:
+        return False
     try:
-        result = subprocess.run(
-            ["plutil", "-extract", "KeepAlive", "raw", path],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
-        if result.returncode != 0:
-            return False
-        val = result.stdout.strip().lower()
-        return val in ("true", "1", "yes")
-    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        with open(plist_path or _PLIST_PATH, "rb") as handle:
+            config = plistlib.load(handle)
+        return isinstance(config, dict) and config.get("KeepAlive") is True
+    except (OSError, ValueError, plistlib.InvalidFileException):
         return False
 
 
@@ -446,6 +438,23 @@ class HealthReporter:
     @staticmethod
     def _is_port_bound(port: int) -> bool:
         """Check whether a TCP port is in LISTEN state via lsof."""
+        if platform.system() == "Windows":
+            # Probe the configured interface, including tailnet-only servers.
+            bind = os.environ.get("LISTEN_HOST", "127.0.0.1")
+            for service, default in (("API", "8092"), ("MCP", "8091")):
+                if port == int(os.environ.get(f"FARMSURV_{service}_PORT", default)):
+                    bind = os.environ.get(f"FARMSURV_{service}_BIND", "tailnet-only")
+                    break
+            if bind == "tailnet-only":
+                from infra.net_bind import TAILNET_BIND
+                bind = TAILNET_BIND
+            if bind in ("all", "0.0.0.0", "::"):
+                bind = "127.0.0.1"
+            try:
+                with socket.create_connection((bind, port), timeout=1):
+                    return True
+            except OSError:
+                return False
         try:
             result = subprocess.run(
                 ["lsof", "-i", f":{port}", "-sTCP:LISTEN", "-n", "-P"],
@@ -753,6 +762,9 @@ class _WatchdogLoop:
 
     def _fire(self) -> None:
         """Execute the watchdog script and log the result."""
+        # launchd watchdog is a macOS integration; Windows uses its service supervisor.
+        if platform.system() == "Windows":
+            return
         # Honor BOTH off-switches.
         if not _WATCHDOG_ENABLED:
             return
