@@ -166,3 +166,22 @@ and extract-only result.json; review that checkpoint before enabling configured
 models or cameras. Native Windows/macOS service behavior and NVIDIA acceleration
 remain unverified. The implementation still selects CoreML/CPU and has no new
 CUDA/DirectML integration.
+
+### Preserved implementation and push confirmation
+
+Final reviewed implementation commit:
+`4dab7dd3f2bfddc86e242eae0b9d51543c7f4bdc`
+(`Add Windows compatibility adapters and camera-free MP4 replay`).
+
+Push to `origin/feature/windows11-video-poc` succeeded; remote ls-remote
+confirmed that exact implementation SHA. Remote main remained
+`c60c34f14705e555f05121a931963dfd4425f42b`; no merge was performed.
+This push-confirmation entry is a documentation-only follow-up commit, so the
+branch tip will be newer than the implementation SHA. Resolve its exact tip with
+`git log -1 --format=%H` or `git ls-remote origin refs/heads/feature/windows11-video-poc`.
+The final chat handoff also reports that tip after push verification.
+
+The branch is available for controlled Windows testing; a green Linux subset
+does not certify Windows, macOS live supervision, NVIDIA, or model accuracy.
+Start with the installation/import/extraction-only checkpoint in
+deploy/windows/README.md. Keep --notify absent and do not start the live daemon.
